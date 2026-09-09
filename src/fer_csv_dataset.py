@@ -4,6 +4,7 @@ import os
 import csv
 import numpy as np
 import torch
+
 from torch.utils.data import Dataset
 from PIL import Image
 
@@ -26,11 +27,12 @@ DISPLAY_NAME = {
 }
 
 
-class FERPlusSoftDataset(Dataset):
-    def __init__(self, csv_path, image_dir, usage, transform=None, min_votes=1):
+class FERPlusDataset(Dataset):
+    def __init__(self, csv_path, image_dir, usage, transform=None, min_votes=1, hard_labels=False):
         self.image_dir = image_dir
         self.transform = transform
         self.classes = KEPT_CLASSES
+        self.hard_labels = hard_labels
         self.class_to_idx = {c: i for i, c in enumerate(KEPT_CLASSES)}
 
         self.samples = []      # lista (putanja_do_slike, soft_label_np_array)
@@ -99,4 +101,7 @@ class FERPlusSoftDataset(Dataset):
         image = Image.open(image_path).convert("RGB")
         if self.transform:
             image = self.transform(image)
+        if self.hard_labels:
+            target = int(np.argmax(soft_label))
+            return image, torch.tensor(target, dtype=torch.long)
         return image, torch.tensor(soft_label, dtype=torch.float32)

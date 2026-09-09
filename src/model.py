@@ -40,7 +40,21 @@ def get_mobilenetv4(num_classes: int, pretrained: bool = True, freeze_backbone: 
  
     return model
 
+def get_mobilevitv2(num_classes: int, pretrained: bool = True, freeze_backbone: bool = True,
+                     model_name: str = "mobilevitv2_100.cvnets_in1k"):
 
+    model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes)
+
+    if freeze_backbone:
+        # umesto pretpostavke o nazivu poslednjeg sloja (kao kod mobilenetv4 "classifier"),
+        # ovde koristimo timm-ov get_classifier() da bismo bili sigurni koji su parametri
+        # klasifikacione glave, bez obzira na internu arhitekturu MobileViTv2
+        classifier_params = set(model.get_classifier().parameters())
+        for param in model.parameters():
+            if param not in classifier_params:
+                param.requires_grad = False
+
+    return model
 
 def unfreeze_model(model):
     for param in model.parameters():

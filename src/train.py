@@ -13,6 +13,10 @@ def soft_ce_loss(logits, target_distribution):
     log_probs = F.log_softmax(logits, dim=1)
     return -(target_distribution * log_probs).sum(dim=1).mean()
 
+def compute_loss(outputs, labels):
+    if config.USE_SOFT_LABELS:
+        return soft_ce_loss(outputs, labels)
+    return F.cross_entropy(outputs, labels)
 
 def train_epoch(model, dataloader, optimizer, device):
     model.train()
@@ -24,13 +28,13 @@ def train_epoch(model, dataloader, optimizer, device):
     correct = 0
     total = 0
     progress_bar = tqdm(dataloader, desc="Training", leave=False)
-    for images, soft_labels in progress_bar:
+    for images, labels in progress_bar:
         images = images.to(device)
-        soft_labels = soft_labels.to(device)          # shape [B, num_classes], suma=1 po redu
+        labels = labels.to(device)          # shape [B, num_classes], suma=1 po redu
 
         optimizer.zero_grad()
         outputs = model(images)
-        loss = soft_ce_loss(outputs, soft_labels)
+        loss = compute_loss(outputs, labels)
         loss.backward()
         optimizer.step()
 
@@ -39,7 +43,7 @@ def train_epoch(model, dataloader, optimizer, device):
         # za "accuracy" tokom treninga poredimo argmax predikcije sa argmax soft labele
         # (samo informativno - stvarna metrika je macro F1 na kraju, ne accuracy)
         predicted = outputs.argmax(dim=1)
-        target_hard = soft_labels.argmax(dim=1)
+        target_hard = labels.argmax(dim=1) if config.USE_SOFT_LABELS else labels
         total += images.size(0)
         correct += predicted.eq(target_hard).sum().item()
 
@@ -57,16 +61,16 @@ def validate(model, dataloader, device):
     total = 0
     progress_bar = tqdm(dataloader, desc="Validation", leave=False)
     with torch.no_grad():
-        for images, soft_labels in progress_bar:
+        for images, labels in progress_bar:
             images = images.to(device)
-            soft_labels = soft_labels.to(device)
+            labels = labels.to(device)
 
             outputs = model(images)
-            loss = soft_ce_loss(outputs, soft_labels)
+            loss = compute_loss(outputs, labels)
             running_loss += loss.item() * images.size(0)
 
             predicted = outputs.argmax(dim=1)
-            target_hard = soft_labels.argmax(dim=1)
+            target_hard = labels.argmax(dim=1) if config.USE_SOFT_LABELS else labels
             total += images.size(0)
             correct += predicted.eq(target_hard).sum().item()
 
@@ -86,16 +90,15 @@ def main():
 
     print("Učitavanje data loader-a (CSV soft labele + weighted sampler)...")
     train_loader, val_loader, _ = get_dataloaders(
-        use_weighted_sampler=True,
+        use_weighted_sampler=config.USE_WEIGHTED_SAMPLER,
         sampler_power=0.5,
     )
 
     print(f"Inicijalizacija modela {config.MODEL_NAME} za Feature Extraction...")
-    model = get_mobilenetv4(
-        num_classes=config.NUM_CLASSES,      #6 klasa
+    model = get_resnet50(
+        num_classes=config.NUM_CLASSES,
         pretrained=config.PRETRAINED,
         freeze_backbone=config.FREEZE_BACKBONE,
-        model_name=config.MODEL_NAME         
     ).to(device)
 
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)

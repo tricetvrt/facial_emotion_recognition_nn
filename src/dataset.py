@@ -1,45 +1,56 @@
 import numpy as np
 import torch
+
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from config import (
     TRAIN_CSV, VAL_CSV, TEST_CSV,          # putanje do fer2013new.csv (ili isti fajl, filtrirano po Usage koloni)
     TRAIN_IMAGE_DIR, VAL_IMAGE_DIR, TEST_IMAGE_DIR,
     BATCH_SIZE,
     NUM_WORKERS,
+    USE_SOFT_LABELS,
+    USE_WEIGHTED_SAMPLER
 )
-from transforms import train_transform, val_transform
-from fer_csv_dataset import FERPlusSoftDataset, KEPT_CLASSES
+from transforms import train_transform, val_transform # moji definisani
+from fer_csv_dataset import FERPlusDataset, KEPT_CLASSES
 
 
 def get_train_dataset():
-    return FERPlusSoftDataset(
+    return FERPlusDataset(
         csv_path=TRAIN_CSV,
         image_dir=TRAIN_IMAGE_DIR,
         usage="Training",
         transform=train_transform,
+        hard_labels= not USE_SOFT_LABELS,
     )
 
 
+
 def get_validation_dataset():
-    return FERPlusSoftDataset(
+
+    return FERPlusDataset(
         csv_path=VAL_CSV,
         image_dir=VAL_IMAGE_DIR,
         usage="PublicTest",
         transform=val_transform,
+        hard_labels= not USE_SOFT_LABELS,
     )
 
 
+
 def get_test_dataset():
-    return FERPlusSoftDataset(
+
+    return FERPlusDataset(
         csv_path=TEST_CSV,
         image_dir=TEST_IMAGE_DIR,
         usage="PrivateTest",
         transform=val_transform,
+        hard_labels= not USE_SOFT_LABELS,
     )
 
 
+
 def make_weighted_sampler(dataset, power=0.5):
-    """Balansira frekvenciju na osnovu argmax (hard) labele svake slike."""
+    #balansira frekvenciju na osnovu argmax (hard) labele svake slike
     targets = np.array(dataset.hard_targets)
     class_counts = np.bincount(targets, minlength=len(KEPT_CLASSES))
     class_weights = 1.0 / (class_counts ** power)
@@ -51,7 +62,7 @@ def make_weighted_sampler(dataset, power=0.5):
     )
 
 
-def get_dataloaders(use_weighted_sampler=True, sampler_power=0.5):
+def get_dataloaders(use_weighted_sampler=USE_WEIGHTED_SAMPLER, sampler_power=0.5):
     train_dataset = get_train_dataset()
     val_dataset = get_validation_dataset()
     test_dataset = get_test_dataset()
@@ -103,7 +114,8 @@ if __name__ == "__main__":
     print("Test samples:", len(test_loader.dataset))
     print("Classes:", get_class_names())
 
-    images, soft_labels = next(iter(train_loader))
-    print("Batch image shape:", images.shape)
-    print("Batch soft-label shape:", soft_labels.shape)
-    print("Primer soft labele:", soft_labels[0])
+    if USE_SOFT_LABELS:
+        images, soft_labels = next(iter(train_loader))
+        print("Batch image shape:", images.shape)
+        print("Batch soft-label shape:", soft_labels.shape)
+        print("Primer soft labele:", soft_labels[0])

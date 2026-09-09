@@ -5,10 +5,11 @@ venv311/
 env/
 
 # Dataset
-data/**
-data2/**
-!data/
-!data/labels.csv
+dataAugmented/**
+dataClean/**
+dataRaw/**
+!dataClean/
+!dataClean/labels.csv
 
 # Python cache
 __pycache__/

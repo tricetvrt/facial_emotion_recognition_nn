@@ -10,11 +10,6 @@ from tqdm import tqdm
 
 
 def soft_ce_loss(logits, target_distribution):
-    """
-    Soft cross-entropy: -sum(target * log_softmax(logits))
-    target_distribution je vektor glasova normalizovan na sumu 1 (soft label),
-    NE one-hot vektor.
-    """
     log_probs = F.log_softmax(logits, dim=1)
     return -(target_distribution * log_probs).sum(dim=1).mean()
 

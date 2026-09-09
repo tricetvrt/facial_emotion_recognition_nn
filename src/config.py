@@ -4,13 +4,13 @@ VAL_DIR = "../data/valid"
 TEST_DIR = "../data/test"
 MODEL_SAVE_PATH = "../models/best_model_resnet.pth"
 
-TRAIN_CSV = "../data2/fer2013new.csv"
-VAL_CSV = "../data2/fer2013new.csv"      # isti fajl, filtrira se po Usage koloni
-TEST_CSV = "../data2/fer2013new.csv"
+TRAIN_CSV = "../dataRaw/fer2013new.csv"
+VAL_CSV = "../dataRaw/fer2013new.csv"      # isti fajl, filtrira se po Usage koloni
+TEST_CSV = "../dataRaw/fer2013new.csv"
 
-TRAIN_IMAGE_DIR = "../data2/FER2013Train"
-VAL_IMAGE_DIR = "../data2/FER2013Valid"
-TEST_IMAGE_DIR = "../data/FER2013Test"
+TRAIN_IMAGE_DIR = "../dataRaw/FER2013Train"
+VAL_IMAGE_DIR = "../dataRaw/FER2013Valid"
+TEST_IMAGE_DIR = "../dataRaw/FER2013Test"
 
 NUM_CLASSES = 6 
 # Dataset

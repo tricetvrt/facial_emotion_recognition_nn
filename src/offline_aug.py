@@ -12,8 +12,7 @@ OUTPUT_CSV = "../dataAugmented/fer2013new_augmented.csv"
 
 offline_aug_transform = transforms.Compose([
     transforms.RandomHorizontalFlip(p=0.5),
-    transforms.RandomRotation(degrees=15),
-    transforms.RandomAffine(degrees=0, translate=(0.08, 0.08), scale=(0.9, 1.1)),
+    transforms.RandomAffine(degrees=15, translate=(0.08, 0.08), scale=(0.9, 1.1), fill=127),
     transforms.ColorJitter(brightness=0.25, contrast=0.25),
 ])
 
@@ -34,7 +33,7 @@ def load_raw_votes_by_image_name(csv_path):
 def main():
     os.makedirs(config.TRAIN_AUG_DIR, exist_ok=True)
     os.makedirs(os.path.dirname(OUTPUT_CSV), exist_ok=True)
-    
+
     print("Ucitavanje train skupa (ista filtracija kao pri treningu)...")
     train_ds = FERPlusDataset(
         csv_path=config.TRAIN_CSV,
@@ -66,10 +65,6 @@ def main():
             src_path = originals[i % n_original]
             src_name = os.path.basename(src_path)
             src_votes = raw_votes_by_name[src_name]   # kopirani glasovi sa originalne slike
-
-            dst_original_path = os.path.join(config.TRAIN_AUG_DIR, src_name)
-            if not os.path.exists(dst_original_path):
-                shutil.copy2(src_path, dst_original_path)
 
             image = Image.open(src_path).convert("RGB")
             aug_image = offline_aug_transform(image)

@@ -8,17 +8,20 @@ TRAIN_CSV = "../dataRaw/fer2013new.csv"
 VAL_CSV = "../dataRaw/fer2013new.csv"      # isti fajl, filtrira se po Usage koloni
 TEST_CSV = "../dataRaw/fer2013new.csv"
 
-TRAIN_IMAGE_DIR = "../dataRaw/FER2013Train"
-VAL_IMAGE_DIR = "../dataRaw/FER2013Valid"
-TEST_IMAGE_DIR = "../dataRaw/FER2013Test"
+TRAIN_IMAGE_DIR = "../dataClean/FER2013Train"
+VAL_IMAGE_DIR = "../dataClean/FER2013Valid"
+TEST_IMAGE_DIR = "../dataClean/FER2013Test"
+
+TRAIN_AUG_DIR = "../dataAugmented/FER2013Train"
+
 
 
 # Dataset
 NUM_CLASSES = 6
 IMAGE_SIZE = 224
 BATCH_SIZE = 32
-NUM_WORKERS = 4
-USE_SOFT_LABELS= True
+NUM_WORKERS = 2
+USE_SOFT_LABELS= False
 USE_WEIGHTED_SAMPLER = False
 
 # Training

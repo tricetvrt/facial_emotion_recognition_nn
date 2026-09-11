@@ -35,7 +35,8 @@ from config import (
     MODEL_SAVE_PATH,
     NUM_CLASSES,
     BATCH_SIZE,
-    MODEL_NAME
+    MODEL_NAME,
+    USE_SOFT_LABELS
 )
 from dataset import get_dataloaders, get_class_names
 from model import get_resnet50, get_mobilenetv4
@@ -64,7 +65,7 @@ def predict(model, test_loader):
     sve_labele = []  # stvarne vrednosti (argmax soft labele = klasa sa najvise glasova)
 
     with torch.no_grad():  # iskljucujemo racunanje gradijenata, ne pamtimo sta se radi dalje
-        for slike, soft_labele in test_loader:  # prolazi batch po batch
+        for slike, labele in test_loader:  # prolazi batch po batch
             slike = slike.to(device)
             izlazi = model(slike)  # nizovi sansi po emociji
 
@@ -72,7 +73,7 @@ def predict(model, test_loader):
             pred = izlazi.argmax(dim=1).cpu().numpy()
 
             # soft_labele je [B, num_classes] distribucija glasova -> argmax daje "tacnu" klasu
-            hard_labele = soft_labele.argmax(dim=1).numpy()
+            hard_labele = labele.argmax(dim=1).numpy() if USE_SOFT_LABELS else labele.numpy()
 
             sve_predikcije.extend(pred)  # dodajemo u listu
             sve_labele.extend(hard_labele)  # dodajemo
@@ -208,9 +209,9 @@ def prikazi_greske(model, test_loader, class_names, n=32, save_path="greske_uzor
  
     greske = []
     with torch.no_grad():
-        for slike, soft_labele in test_loader:
+        for slike, labele in test_loader:
             slike_gpu = slike.to(device)
-            y_true = soft_labele.argmax(dim=1)
+            y_true = labele.argmax(dim=1) if USE_SOFT_LABELS else labele
             y_pred = model(slike_gpu).argmax(dim=1).cpu()
  
             for i in range(len(y_true)):
@@ -251,7 +252,7 @@ def main():
 
     acc, precision, recall, f1 = racunaj_metrike(y_true, y_pred, class_names)
 
-   # plot_confusion_matrix(y_true, y_pred, class_names)
+    plot_confusion_matrix(y_true, y_pred, class_names)
     plot_f1_po_klasi(y_true, y_pred, class_names)
     top_parovi_zabune(y_true, y_pred, class_names)
     prikazi_greske(model, test_loader, class_names, n=32)

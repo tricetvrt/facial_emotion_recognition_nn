@@ -7,6 +7,15 @@ import config
 from dataset import get_dataloaders
 from model import get_resnet50, get_mobilenetv4
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+import json
+
+history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
+
+
+
+
+
 
 
 def soft_ce_loss(logits, target_distribution):
@@ -149,8 +158,25 @@ def main():
                 f"u poslednjih {PATIENCE} epoha (best_val_loss={best_val_loss:.4f})."
             )
             break
+        history["train_loss"].append(train_loss)
+        history["train_acc"].append(train_acc)
+        history["val_loss"].append(val_loss)
+        history["val_acc"].append(val_acc)
 
     print("\nTrening zavrsen!")
+    with open("../models/training_history.json", "w") as f:
+        json.dump(history, f)
+
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    axes[0].plot(history["train_loss"], label="train")
+    axes[0].plot(history["val_loss"], label="val")
+    axes[0].set_title("Loss"); axes[0].set_xlabel("Epoha"); axes[0].legend()
+    axes[1].plot(history["train_acc"], label="train")
+    axes[1].plot(history["val_acc"], label="val")
+    axes[1].set_title("Accuracy"); axes[1].set_xlabel("Epoha"); axes[1].legend()
+    plt.tight_layout()
+    plt.savefig("../models/training_curve.png", dpi=150)
 
 
 if __name__ == "__main__":

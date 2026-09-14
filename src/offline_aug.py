@@ -7,12 +7,13 @@ import shutil
 from fer_csv_dataset import FERPlusDataset, KEPT_CLASSES, FERPLUS_COLUMNS
 import config
 
-TARGET_COUNT = 7000
+TARGET_COUNT = 5000
 OUTPUT_CSV = "../dataAugmented/fer2013new_augmented.csv"
 
 offline_aug_transform = transforms.Compose([
+    transforms.Resize((224,224)),
     transforms.RandomHorizontalFlip(p=0.5),
-    transforms.RandomAffine(degrees=15, translate=(0.08, 0.08), scale=(0.9, 1.1), fill=127),
+    transforms.RandomAffine(degrees=15,translate=(0.08, 0.08), scale=(0.95, 1.1), fill=127, interpolation=transforms.InterpolationMode.BILINEAR),
     transforms.ColorJitter(brightness=0.25, contrast=0.25),
 ])
 

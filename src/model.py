@@ -56,6 +56,18 @@ def get_mobilevitv2(num_classes: int, pretrained: bool = True, freeze_backbone: 
 
     return model
 
+def get_convnext(num_classes: int, pretrained: bool = True, freeze_backbone: bool = True,
+                  model_name: str = "convnext_tiny.fb_in22k_ft_in1k"):
+    model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes)
+
+    if freeze_backbone:
+        classifier_params = set(model.get_classifier().parameters())
+        for param in model.parameters():
+            if param not in classifier_params:
+                param.requires_grad = False
+
+    return model
+
 def unfreeze_model(model):
     for param in model.parameters():
         param.requires_grad = True
